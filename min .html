@@ -1,0 +1,118 @@
+))<!DOCTYPE html><html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>CYBER‑67 TEAM · Hacker Dashboard</title>
+<style>
+body{margin:0;background:#000;color:#00ffbf;font-family:monospace;overflow:hidden;}
+canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
+.container{display:flex;height:100vh;position:relative;}
+.sidebar{width:250px;background:rgba(0,0,0,0.8);border-right:2px solid #00ffbf;padding:20px;}
+.sidebar h2{text-align:center;}
+.sidebar button{width:100%;padding:12px;margin:8px 0;background:#001a14;border:1px solid #00ffbf;color:#00ffbf;cursor:pointer;border-radius:6px;transition:0.2s;}
+.sidebar button:hover{background:#00ffbf;color:black;box-shadow:0 0 10px #00ffbf;}
+.main{flex:1;padding:20px;position:relative;}
+.terminal{background:#001a14;border:2px solid #00ffbf;height:70%;padding:20px;overflow-y:auto;box-shadow:0 0 20px #00ffbf inset;}
+#output{white-space:pre-wrap;}
+#adminPanel{display:none;background:#00251c;padding:20px;border:2px solid #00ffbf;margin-top:15px;}
+#moduleList button{width:100%;padding:10px;margin:4px 0;background:#001a14;border:1px solid #00ffbf;color:#00ffbf;cursor:pointer;border-radius:4px;}
+#moduleList button:hover{background:#00ffbf;color:black;}
+input,textarea{width:100%;padding:10px;margin:6px 0;background:#000;border:1px solid #00ffbf;color:#00ffbf;}
+#moduleEditor{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#00251c;padding:20px;border:2px solid #00ffbf;z-index:100;width:400px;max-width:90%;box-shadow:0 0 20px #00ffbf;}
+button.saveBtn{background:#00ffbf;color:black;border:none;cursor:pointer;padding:10px;margin-top:5px;width:48%;margin-right:4%;}
+button.backBtn{background:#ff0000;color:white;border:none;cursor:pointer;padding:10px;margin-top:5px;width:48%;}
+#backMainBtn{display:none;margin-top:10px;padding:10px;width:100%;background:#ff0000;color:white;border:none;cursor:pointer;border-radius:6px;}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div class="container">
+<div class="sidebar">
+<h2>CYBER‑67 TEAM</h2>
+<div id="sidebarButtons"></div>
+<button onclick="openAdmin()">⚙️ ADMIN PANEL</button>
+</div>
+<div class="main">
+<button id="backMainBtn" onclick="backToMain()">⬅️ BACK</button>
+<div class="terminal"><div id="output">>>> CYBER‑67 SYSTEM LOADED...</div></div>
+<div id="adminPanel">
+<h3>🛠 Module Management</h3>
+<div id="moduleList"><p>মডিউল এডিট করতে নিচের মডিউল নির্বাচন করো:</p></div>
+<div id="moduleEditor">
+<label>মডিউলের নাম:</label>
+<input id="editModuleName">
+<label>মডিউলের টেক্সট:</label>
+<textarea id="editModuleText" rows="5"></textarea>
+<div style="display:flex; justify-content:space-between;">
+<button class="saveBtn" onclick="saveModule()">সেভ করো</button>
+<button class="backBtn" onclick="backToList()">⬅️ BACK</button>
+</div>
+</div>
+<h3>🆕 নতুন Module তৈরি</h3>
+<label>মডিউলের নাম:</label>
+<input id="moduleName" placeholder="যেমন: SERVER INFO">
+<label>মডিউলের টেক্সট:</label>
+<textarea id="moduleText" rows="5" placeholder="যে লেখা দেখাতে চাও এখানে লিখো..."></textarea>
+<button onclick="addModule()">মডিউল যোগ করো</button>
+<h3>🔧 HTML Upload for Modules</h3>
+<input type="file" id="moduleFile" accept=".html,.htm">
+<button onclick="uploadModuleFile()">Upload & Save</button>
+</div>
+</div>
+</div>
+<script>
+/* MATRIX EFFECT */
+const canvas=document.getElementById("matrix"),ctx=canvas.getContext("2d");canvas.width=window.innerWidth;canvas.height=window.innerHeight;let chars="01 CYBER67 TEAM HACK ".split("");let fontSize=14,columns=canvas.width/fontSize,drops=[];for(let i=0;i<columns;i++)drops[i]=1;setInterval(()=>{ctx.fillStyle="rgba(0,0,0,0.05)";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#00ffbf";ctx.font=fontSize+"px monospace";for(let i=0;i<drops.length;i++){let text=chars[Math.floor(Math.random()*chars.length)];ctx.fillText(text,i*fontSize,drops[i]*fontSize);if(drops[i]*fontSize>canvas.height&&Math.random()>0.975)drops[i]=0;drops[i]++;}},33);
+/* TERMINAL TYPE EFFECT */
+function typeWrite(text){let o=document.getElementById("output");o.innerText="";let i=0;let timer=setInterval(()=>{o.innerText+=text[i];i++;if(i>=text.length)clearInterval(timer);},5);}
+let customModules={};
+let moduleHTML={};
+let sidebarModules=[
+    {id:'home',name:'HOME',text:'>>> WELCOME TO CYBER‑67 DASHBOARD\n>>> SYSTEM STATUS: ONLINE'},
+    {id:'scan',name:'URL SCANNER',text:''},
+    {id:'seo',name:'SEO CHECK',text:''},
+    {id:'links',name:'LINK ANALYZER',text:''},
+    {id:'security',name:'SECURITY CHECK',text:''},
+    {id:'about',name:'ABOUT TEAM',text:'>>> CYBER‑67 TEAM\nDeveloper: YOU\nSystem: Fully Customizable'}
+];
+function renderSidebar(){
+    let div=document.getElementById('sidebarButtons');
+    div.innerHTML='';
+    sidebarModules.forEach(m=>{
+        let btn=document.createElement('button');
+        btn.innerText=m.name==='HOME'?'🏠 '+m.name:m.name==='ABOUT TEAM'?'⚡ '+m.name:m.name==='URL SCANNER'?'🔍 '+m.name:m.name==='SEO CHECK'?'📊 '+m.name:m.name==='LINK ANALYZER'?'🔗 '+m.name:m.name==='SECURITY CHECK'?'🛡 '+m.name:m.name;
+        btn.onclick=()=>showModuleDesign(m.id);
+        div.appendChild(btn);
+    });
+}
+renderSidebar();
+function showModuleDesign(id){
+    document.getElementById('backMainBtn').style.display='block';
+    showText(id);
+}
+function backToMain(){
+    document.getElementById('backMainBtn').style.display='none';
+    typeWrite('>>> CYBER‑67 SYSTEM LOADED...');
+}
+function showText(id){
+    let module=sidebarModules.find(m=>m.id===id);
+    if(['scan','seo','links','security'].includes(id)){
+        let html=moduleHTML[id] || '';
+        document.getElementById('output').innerHTML=`<iframe style="width:100%;height:100%;border:none;background:white;" srcdoc="${html.replace(/"/g,'&quot;')}"></iframe>`;
+    }else{
+        typeWrite(module.text);
+    }
+}
+function openAdmin(){let pass=prompt('Enter Admin Password:');if(pass==='Cyber67'){document.getElementById('adminPanel').style.display='block';typeWrite('>>> ADMIN ACCESS GRANTED\n>>> Welcome, CYBER‑67 ADMIN!');renderModuleList();}else{typeWrite('>>> ACCESS DENIED ❌');}}
+function addModule(){let name=document.getElementById('moduleName').value.trim();let text=document.getElementById('moduleText').value.trim();if(!name||!text){alert('সব কিছু পূরণ করো!');return;}let id=name.toLowerCase().replace(/ /g,'_');customModules[id]={name,text};sidebarModules.push({id,name,text});renderSidebar();alert('Module যোগ হয়েছে!');document.getElementById('moduleName').value='';document.getElementById('moduleText').value='';renderModuleList();}
+let currentModuleId=null;
+function renderModuleList(){let list=document.getElementById('moduleList');list.innerHTML='<p>মডিউল এডিট করতে নিচের মডিউল নির্বাচন করো:</p>';sidebarModules.forEach(m=>{let btn=document.createElement('button');btn.innerText=m.name;btn.onclick=()=>editModule(m.id);list.appendChild(btn);});}
+function editModule(id){currentModuleId=id;document.getElementById('moduleList').style.display='none';document.getElementById('moduleEditor').style.display='block';let mod=sidebarModules.find(m=>m.id===id);document.getElementById('editModuleName').value=mod.name;document.getElementById('editModuleText').value=mod.text;}
+function saveModule(){let newName=document.getElementById('editModuleName').value.trim();let newText=document.getElementById('editModuleText').value.trim();if(!newName||!newText){alert('সব কিছু পূরণ করো!');return;}let mod=sidebarModules.find(m=>m.id===currentModuleId);mod.name=newName;mod.text=newText;if(customModules[currentModuleId]){customModules[currentModuleId].name=newName;customModules[currentModuleId].text=newText;}
+renderSidebar();alert('Module আপডেট হয়েছে!');backToList();}
+function backToList(){document.getElementById('moduleEditor').style.display='none';document.getElementById('moduleList').style.display='block';}
+function uploadModuleFile(){let file=document.getElementById('moduleFile').files[0];if(!file){alert('HTML ফাইল সিলেক্ট করো!');return;}let reader=new FileReader();reader.onload=function(e){
+let id=prompt('এই HTML কোন মডিউলের জন্য লিখবে? (যেমন: scan, seo, links, security)');id=id.trim().toLowerCase();if(['scan','seo','links','security'].includes(id)){moduleHTML[id]=e.target.result;localStorage.setItem('moduleHTML_'+id,e.target.result);alert(id+' HTML সেভ হয়েছে!');}else{alert('সঠিক মডিউল নাম দিন!');}};reader.readAsText(file);}
+window.onload=function(){['scan','seo','links','security'].forEach(id=>{let html=localStorage.getItem('moduleHTML_'+id);if(html)moduleHTML[id]=html;});};
+</script>
+</body>
+</html>
